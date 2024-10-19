@@ -13,6 +13,7 @@ import (
 
 func main() {
 	exclude := flag.String("exclude", "", "Padrões de exclusão (wildcards), separados por vírgula")
+	maxDepth := flag.Int("max-depth", 0, "Limite de profundidade da árvore (0 para ilimitado)")
 	flag.Parse()
 
 	path := "."
@@ -30,7 +31,7 @@ func main() {
 	}
 
 	fsRepo := infrastructure.NewFileSystemRepository()
-	treeService := application.NewTreeService(fsRepo, excludeGlobs)
+	treeService := application.NewTreeService(fsRepo, excludeGlobs, *maxDepth)
 	cli := interfaces.NewCLI(treeService)
 
 	err := cli.Run(path)
