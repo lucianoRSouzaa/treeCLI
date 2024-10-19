@@ -1,9 +1,10 @@
 package domain
 
 type TreeNode struct {
-	Name     string
-	Children []*TreeNode
-	IsLast   bool
+	Name       string
+	Children   []*TreeNode
+	IsLast     bool
+	IsExcluded bool
 }
 
 type TreeRepository interface {
