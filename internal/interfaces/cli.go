@@ -28,6 +28,11 @@ func (cli *CLI) Run(path string) error {
 }
 
 func (cli *CLI) printTree(node *domain.TreeNode, prefix string) {
+	if node.IsExcluded && prefix != "" {
+		fmt.Println(prefix + node.Name + " (conteúdo oculto)")
+		return
+	}
+
 	fmt.Println(prefix + node.Name)
 	cli.printChildren(node.Children, prefix)
 }
@@ -40,9 +45,14 @@ func (cli *CLI) printChildren(children []*domain.TreeNode, prefix string) {
 			connector = "└── "
 			newPrefix = prefix + "    "
 		}
-		fmt.Println(prefix + connector + child.Name)
-		if len(child.Children) > 0 {
-			cli.printChildren(child.Children, newPrefix)
+
+		if child.IsExcluded {
+			fmt.Println(prefix + connector + child.Name + " (conteúdo oculto)")
+		} else {
+			fmt.Println(prefix + connector + child.Name)
+			if len(child.Children) > 0 {
+				cli.printChildren(child.Children, newPrefix)
+			}
 		}
 	}
 }
