@@ -16,7 +16,20 @@ func main() {
 	maxDepth := flag.Int("max-depth", 0, "Limite de profundidade da árvore (0 para ilimitado)")
 	includeExts := flag.String("ext", "", "Lista de extensões de arquivo a serem incluídas (por exemplo, .go,.md)")
 	excludeExts := flag.String("exclude-ext", "", "Lista de extensões de arquivo a serem excluídas (por exemplo, .txt,.log)")
+	help := flag.Bool("help", false, "Exibe esta mensagem de ajuda")
+
+	flag.Usage = func() {
+		fmt.Fprintf(flag.CommandLine.Output(), "Uso: %s [opções] [caminho]\n", os.Args[0])
+		fmt.Println("\nOpções:")
+		flag.PrintDefaults()
+	}
+
 	flag.Parse()
+
+	if *help {
+		flag.Usage()
+		os.Exit(0)
+	}
 
 	path := "."
 	args := flag.Args()
