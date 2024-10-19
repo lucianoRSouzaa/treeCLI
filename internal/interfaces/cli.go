@@ -18,7 +18,7 @@ func NewCLI(service *application.TreeService) *CLI {
 }
 
 func (cli *CLI) Run(path string) error {
-	tree, err := cli.Service.BuildTree(path)
+	tree, err := cli.Service.BuildTree(path, 0)
 	if err != nil {
 		return err
 	}
@@ -46,10 +46,16 @@ func (cli *CLI) printChildren(children []*domain.TreeNode, prefix string) {
 			newPrefix = prefix + "    "
 		}
 
+		line := prefix + connector + child.Name
+
 		if child.IsExcluded {
-			fmt.Println(prefix + connector + child.Name + " (conteúdo oculto)")
+			line += " (conteúdo oculto)"
+			fmt.Println(line)
+		} else if child.IsDepthExceeded {
+			line += " (profundidade máxima atingida)"
+			fmt.Println(line)
 		} else {
-			fmt.Println(prefix + connector + child.Name)
+			fmt.Println(line)
 			if len(child.Children) > 0 {
 				cli.printChildren(child.Children, newPrefix)
 			}
