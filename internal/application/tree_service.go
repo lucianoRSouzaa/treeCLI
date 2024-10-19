@@ -1,18 +1,21 @@
 package application
 
 import (
+	"path/filepath"
 	"sort"
 
 	"treecli/internal/domain"
 )
 
 type TreeService struct {
-	Repo domain.TreeRepository
+	Repo         domain.TreeRepository
+	ExcludeGlobs []string
 }
 
-func NewTreeService(repo domain.TreeRepository) *TreeService {
+func NewTreeService(repo domain.TreeRepository, excludeGlobs []string) *TreeService {
 	return &TreeService{
-		Repo: repo,
+		Repo:         repo,
+		ExcludeGlobs: excludeGlobs,
 	}
 }
 
@@ -24,6 +27,15 @@ func (ts *TreeService) BuildTree(path string) (*domain.TreeNode, error) {
 
 	node := &domain.TreeNode{
 		Name: path,
+	}
+
+	shouldExclude, err := ts.shouldExclude(path)
+	if err != nil {
+		return nil, err
+	}
+	if shouldExclude {
+		node.IsExcluded = true
+		return node, nil
 	}
 
 	if !isDir {
@@ -38,15 +50,31 @@ func (ts *TreeService) BuildTree(path string) (*domain.TreeNode, error) {
 	sort.Strings(entries)
 
 	for i, entry := range entries {
-		fullPath := path + "/" + entry
+		fullPath := filepath.Join(path, entry)
 		childNode, err := ts.BuildTree(fullPath)
 		if err != nil {
 			return nil, err
 		}
 		childNode.Name = entry
 		childNode.IsLast = i == len(entries)-1
-		node.Children = append(node.Children, childNode)
+		if !childNode.IsExcluded {
+			node.Children = append(node.Children, childNode)
+		}
 	}
 
 	return node, nil
+}
+
+func (ts *TreeService) shouldExclude(path string) (bool, error) {
+	base := filepath.Base(path)
+	for _, pattern := range ts.ExcludeGlobs {
+		match, err := filepath.Match(pattern, base)
+		if err != nil {
+			return false, err
+		}
+		if match {
+			return true, nil
+		}
+	}
+	return false, nil
 }
