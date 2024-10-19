@@ -10,16 +10,25 @@ import (
 type TreeService struct {
 	Repo         domain.TreeRepository
 	ExcludeGlobs []string
+	MaxDepth     int
 }
 
-func NewTreeService(repo domain.TreeRepository, excludeGlobs []string) *TreeService {
+func NewTreeService(repo domain.TreeRepository, excludeGlobs []string, maxDepth int) *TreeService {
 	return &TreeService{
 		Repo:         repo,
 		ExcludeGlobs: excludeGlobs,
+		MaxDepth:     maxDepth,
 	}
 }
 
-func (ts *TreeService) BuildTree(path string) (*domain.TreeNode, error) {
+func (ts *TreeService) BuildTree(path string, currentDepth int) (*domain.TreeNode, error) {
+	if ts.MaxDepth > 0 && currentDepth > ts.MaxDepth {
+		return &domain.TreeNode{
+			Name:            filepath.Base(path),
+			IsDepthExceeded: true,
+		}, nil
+	}
+
 	isDir, err := ts.Repo.IsDir(path)
 	if err != nil {
 		return nil, err
@@ -51,7 +60,7 @@ func (ts *TreeService) BuildTree(path string) (*domain.TreeNode, error) {
 
 	for i, entry := range entries {
 		fullPath := filepath.Join(path, entry)
-		childNode, err := ts.BuildTree(fullPath)
+		childNode, err := ts.BuildTree(fullPath, currentDepth+1)
 		if err != nil {
 			return nil, err
 		}
